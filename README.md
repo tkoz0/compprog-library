@@ -24,6 +24,14 @@ Data structures
 - `SLList<T>` singly linked list
 - `DLList<T>` doubly linked list similar to `std::list<T>`
 
+TODOS
+- rewrite `operator=` to use copy and swap (this handles self assignment)
+- reduce some code duplication
+
 # python3
 
 Not really planned yet since I like C++ more than Python3.
+
+# java
+
+Even lower priority than Python3 due to my language preferences.

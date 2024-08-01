@@ -51,17 +51,30 @@ template <typename T>
 class FixArray
 {
 private:
+    // array storing the data
     T *_arr;
+    // length of the data
     size_t _len;
+    // swap states with another object
+    inline void _swap(FixArray<T>& arr) noexcept
+    {
+        std::swap(_arr,arr._arr);
+        std::swap(_len,arr._len);
+    }
 public:
+    // iterator
     typedef T *itr_t;
+    // const iterator
     typedef const T *citr_t;
+    // default constructor (empty)
     FixArray() noexcept: _arr(nullptr), _len(0) {}
+    // destructor
     ~FixArray()
     {
         delete[] _arr;
         _arr = nullptr;
     }
+    // size initialization with fill value
     FixArray(int64_t siz, const T& val = T())
     {
         CHECK_THROW(siz >= 0);
@@ -70,49 +83,45 @@ public:
         _len = siz;
         std::fill(_arr,_arr+_len,val);
     }
+    // initializer list initialization
     FixArray(std::initializer_list<T> vals)
     {
         _arr = new T[vals.size()];
         _len = vals.size();
         std::copy(vals.begin(),vals.end(),_arr);
     }
+    // copy constructor
     FixArray(const FixArray<T>& arr)
     {
         _arr = new T[arr._len];
         _len = arr._len;
         std::copy(arr.begin(),arr.end(),_arr);
     }
-    FixArray(FixArray<T>&& arr) noexcept
-    {
-        _arr = arr._arr;
-        _len = arr._len;
-        arr._arr = nullptr;
-    }
+    // move constructor
+    FixArray(FixArray<T>&& arr) noexcept: FixArray() { _swap(arr); }
+    // copy assignment
     FixArray<T>& operator=(const FixArray<T>& arr)
-    {
-        delete[] _arr;
-        _arr = new T[arr._len];
-        _len = arr._len;
-        std::copy(arr.begin(),arr.end(),_arr);
-        return *this;
-    }
-    FixArray<T>& operator=(FixArray<T>&& arr)
-    {
-        delete[] _arr;
-        _arr = arr._arr;
-        _len = arr._len;
-        arr._arr = nullptr;
-        return *this;
-    }
+    { FixArray<T> tmp(arr); _swap(tmp); return *this; }
+    // move assignment
+    FixArray<T>& operator=(FixArray<T>&& arr) noexcept
+    { _swap(arr); return *this; }
+    // begin iterator
     inline itr_t begin() noexcept { return _arr; }
+    // begin const iterator
     inline citr_t begin() const noexcept { return _arr; }
+    // end iterator
     inline itr_t end() noexcept { return _arr + _len; }
+    // end const iterator
     inline citr_t end() const noexcept { return _arr + _len; }
+    // pointer to data
     inline T *ptr() noexcept { return _arr; }
+    // const pointer to data
     inline const T *ptr() const noexcept { return _arr; }
+    // length of data
     inline size_t size() const noexcept { return _len; }
     // is length 0
     inline bool empty() const noexcept { return _len == 0; }
+    // compare equality (same length and same elements in same order)
     inline bool operator==(const FixArray<T>& arr)
     {
         if (_len != arr._len)
@@ -122,19 +131,23 @@ public:
                 return false;
         return true;
     }
+    // compare inequality
     inline bool operator!=(const FixArray<T>& arr) { return !(*this == arr); }
+    // element access
     inline T& operator[](int64_t i)
     {
         CHECK_THROW(i < (int64_t)_len && i >= -(int64_t)_len);
         return i >= 0 ? _arr[i] : _arr[_len + i];
     }
+    // const element access
     inline const T& operator[](int64_t i) const
     {
         CHECK_THROW(i < (int64_t)_len && i >= -(int64_t)_len);
         return i >= 0 ? _arr[i] : _arr[_len + i];
     }
+    // reverse order of elements
     void reverse() { std::reverse(begin(),end()); }
-    // concatenate
+    // concatenate 2 arrays
     friend FixArray<T> operator+(const FixArray<T>& arr1, const FixArray<T>& arr2)
     {
         FixArray<T> ret(arr1.size() + arr2.size());
@@ -157,6 +170,7 @@ public:
     }
     // repeated array
     friend inline FixArray<T> operator*(int64_t n, const FixArray<T>& arr) { return arr * n; }
+    // print text representation
     friend std::ostream& operator<<(std::ostream& os, const FixArray<T>& arr)
     {
         os << "FixArray[";
@@ -200,10 +214,14 @@ public:
         CHECK_THROW(n >= 0);
         return slice(std::max((int64_t)0,(int64_t)_len-n),_len);
     }
+    // (unstable) sort
     void sort() { std::sort(begin(),end()); }
+    // (unstable) sort with custom comparator
     template <typename F>
     void sort(F comp) { std::sort(begin(),end(),comp); }
+    // stable sort
     void stableSort() { std::stable_sort(begin(),end()); }
+    // stable sort with custom comparator
     template <typename F>
     void stableSort(F comp) { std::stable_sort(begin(),end(),comp); }
     // array from func(0),func(1),...,func(n-1)
@@ -212,6 +230,72 @@ public:
         FixArray<T> ret(n);
         for (size_t i = 0; i < n; ++i)
             ret._arr[i] = func(i);
+        return ret;
+    }
+    // for each with index and reference
+    void forEach(std::function<void(size_t,T&)> func)
+    { size_t i = 0; for (T& v : *this) func(i++,v); }
+    // for each with reference only
+    void forEach(std::function<void(T&)> func)
+    { for (T& v : *this) func(v); }
+    // for each with index and const reference
+    void forEach(std::function<void(size_t,const T&)> func) const
+    { size_t i = 0; for (const T& v : *this) func(i++,v); }
+    // for each with const reference only
+    void forEach(std::function<void(const T&)> func) const
+    { for (const T& v : *this) func(v); }
+    // map with indexes included
+    template <typename U>
+    FixArray<U> map(std::function<U(size_t,const T&)> func) const
+    {
+        return FixArray<U>::fromFunc(_len,[&func,this](size_t i)
+            {return func(i,_arr[i]); });
+    }
+    // map with elements only
+    template <typename U>
+    FixArray<U> map(std::function<U(const T&)> func) const
+    {
+        return FixArray<U>::fromFunc(_len,[&func,this](size_t i)
+            { return func(_arr[i]); });
+    }
+    // filter by index and value
+    FixArray<T> filter(std::function<bool(size_t,const T&)> func) const
+    {
+        size_t count = 0;
+        for (size_t i = 0; i < _len; ++i)
+            if (func(i,_arr[i])) ++count;
+        FixArray<T> ret(count);
+        size_t j = 0;
+        for (size_t i = 0; i < _len; ++i)
+            if (func(i,_arr[i])) ret[j++] = _arr[i];
+        return ret;
+    }
+    // filter by value only
+    FixArray<T> filter(std::function<bool(const T&)> func) const
+    {
+        size_t count = 0;
+        for (size_t i = 0; i < _len; ++i)
+            if (func(_arr[i])) ++count;
+        FixArray<T> ret(count);
+        size_t j = 0;
+        for (size_t i = 0; i < _len; ++i)
+            if (func(_arr[i])) ret[j++] = _arr[i];
+        return ret;
+    }
+    // fold left: ((a op b) op c) ...
+    T foldLeft(std::function<T(const T&,const T&)> func, const T& init = T()) const
+    {
+        T ret = init;
+        for (size_t i = 0; i < _len; ++i)
+            ret = func(ret,_arr[i]);
+        return ret;
+    }
+    // fold right: ... (c op (b op a))
+    T foldRight(std::function<T(const T&,const T&)> func, const T& init = T()) const
+    {
+        T ret = init;
+        for (size_t i = _len; i--;)
+            ret = func(_arr[i],ret);
         return ret;
     }
 };

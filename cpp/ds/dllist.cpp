@@ -50,18 +50,25 @@ template <typename T>
 class DLList
 {
 private:
+    // linked list node
     struct _node
     {
+        // stored value
         T _val;
+        // adjacent node pointers
         _node *_prev, *_next;
+        // copy construction
         inline _node(const T& val = T(), _node *prev = nullptr, _node *next = nullptr) noexcept:
             _val(val), _prev(prev), _next(next) {}
+        // move construction
         inline _node(T&& val = T(), _node *prev = nullptr, _node *next = nullptr) noexcept:
             _val(val), _prev(prev), _next(next) {}
     };
     struct _iter
     {
+        // pointer to node
         _node *_ptr;
+        // list pointer to access head/tail for cyclic iteration
         DLList<T> *_list;
         inline _iter(_node *ptr, DLList<T> *list) noexcept: _ptr(ptr), _list(list) {}
         inline T& operator*() { CHECK_THROW(_ptr); return _ptr->_val; }
@@ -78,7 +85,9 @@ private:
     };
     struct _citer
     {
+        // pointer to node
         const _node *_ptr;
+        // list pointer to access head/tail for cyclic iteration
         const DLList<T> *_list;
         inline _citer(const _node *ptr, const DLList<T> *list) noexcept: _ptr(ptr), _list(list) {}
         inline const T& operator*() { CHECK_THROW(_ptr); return _ptr->_val; }
@@ -91,7 +100,9 @@ private:
         inline bool operator!=(const _citer& i) const { return _ptr != i._ptr; }
         inline operator bool() const { return _ptr; }
     };
+    // pointers to ends of list
     _node *_head, *_tail;
+    // number of nodes in list
     size_t _size;
     // delete all nodes, does not touch _size
     inline void _clear()
@@ -104,7 +115,7 @@ private:
         }
         _tail = nullptr;
     }
-    // duplicate linked list, does no clear existing data
+    // duplicate linked list, does not clear existing data
     inline void _copy_ll(_node *n)
     {
         if (!n)
@@ -190,11 +201,23 @@ private:
         _head = sorted.first;
         _tail = sorted.second;
     }
+    // swap contents with other
+    inline void _swap(DLList<T>& list) noexcept
+    {
+        std::swap(_head,list._head);
+        std::swap(_tail,list._tail);
+        std::swap(_size,list._size);
+    }
 public:
+    // iterator
     typedef _iter itr_t;
+    // const iterator
     typedef _citer citr_t;
+    // defaultt constructor (empty)
     DLList() noexcept: _head(nullptr), _tail(nullptr), _size(0) {}
+    // destructor
     ~DLList() { _clear(); }
+    // size with fill value
     DLList(int64_t siz, const T& val = T())
     {
         CHECK_THROW(siz >= 0);
@@ -212,6 +235,7 @@ public:
             }
         }
     }
+    // initializer list
     DLList(std::initializer_list<T> vals)
     {
         _head = _tail = nullptr;
@@ -227,40 +251,33 @@ public:
         }
         _size = vals.size();
     }
+    // copy constructor
     DLList(const DLList<T>& list)
     {
         _copy_ll(list._head);
         _size = list._size;
     }
-    DLList(DLList<T>&& list) noexcept
-    {
-        _head = list._head;
-        _tail = list._tail;
-        _size = list._size;
-        list._head = list._tail = nullptr;
-    }
+    // move constructor
+    DLList(DLList<T>&& list) noexcept: DLList() { _swap(list); }
+    // copy assignment
     DLList<T>& operator=(const DLList<T>& list)
-    {
-        _clear();
-        _copy_ll(list._head);
-        _size = list._size;
-        return *this;
-    }
-    DLList<T>& operator=(DLList<T>&& list)
-    {
-        _clear();
-        _head = list._head;
-        _tail = list._tail;
-        _size = list._size;
-        list._head = list._tail = nullptr;
-        return *this;
-    }
+    { DLList<T> tmp(list); _swap(tmp); return *this; }
+    // move assignment
+    DLList<T>& operator=(DLList<T>&& list) noexcept
+    { _swap(list); return *this; }
+    // begin iterator
     inline itr_t begin() noexcept { return _iter(_head,this); }
+    // begin const iterator
     inline citr_t begin() const noexcept { return _citer(_head,this); }
+    // end iterator
     inline itr_t end() noexcept { return _iter(nullptr,this); }
+    // end const iterator
     inline citr_t end() const noexcept { return _citer(nullptr,this); }
+    // number of list nodes
     inline size_t size() const noexcept { return _size; }
+    // is list empty
     inline bool empty() const noexcept { return _size == 0; }
+    // compare equality (same size and same elements in same order)
     inline bool operator==(const DLList<T>& list)
     {
         if (_size != list._size)
@@ -275,26 +292,14 @@ public:
         }
         return true;
     }
+    // compare inequality
     inline bool operator!=(const DLList<T>& list) { return !(*this == list); }
+    // element access by index (slow)
     inline T& get(int64_t i)
     {
-        CHECK_THROW(i < (int64_t)_size && i >= -(int64_t)_size);
-        size_t j = i >= 0 ? i : _size+i;
-        if (j >= _size/2)
-        {
-            _node *n = _tail;
-            while (++j < _size)
-                n = n->_prev;
-            return n->_val;
-        }
-        else
-        {
-            _node *n = _head;
-            while (j--)
-                n = n->_next;
-            return n->_val;
-        }
+        return const_cast<T&>(const_cast<const DLList<T>*>(this)->get(i));
     }
+    // const element access by index (slow)
     inline const T& get(int64_t i) const
     {
         CHECK_THROW(i < (int64_t)_size && i >= -(int64_t)_size);
@@ -314,6 +319,7 @@ public:
             return n->_val;
         }
     }
+    // text representation
     friend std::ostream& operator<<(std::ostream& os, const DLList<T>& list)
     {
         os << "DLList[";
@@ -331,17 +337,13 @@ public:
         os << "]";
         return os;
     }
+    // append at front
     inline void push_front(const T& val)
     {
-        if (!_head)
-            _head = _tail = new _node(val);
-        else
-        {
-            _head->_prev = new _node(val,nullptr,_head);
-            _head = _head->_prev;
-        }
-        ++_size;
+        T tmp = val;
+        push_front(std::move(tmp));
     }
+    // append at front
     inline void push_front(T&& val)
     {
         if (!_head)
@@ -353,17 +355,13 @@ public:
         }
         ++_size;
     }
+    // append at back
     inline void push_back(const T& val)
     {
-        if (!_head)
-            _head = _tail = new _node(val);
-        else
-        {
-            _tail->_next = new _node(val,_tail);
-            _tail = _tail->_next;
-        }
-        ++_size;
+        T tmp = val;
+        push_back(std::move(tmp));
     }
+    // append at back
     inline void push_back(T&& val)
     {
         if (!_head)
@@ -375,6 +373,7 @@ public:
         }
         ++_size;
     }
+    // remove from front
     inline T pop_front()
     {
         CHECK_THROW(_head);
@@ -389,6 +388,7 @@ public:
         --_size;
         return ret;
     }
+    // remove from back
     inline T pop_back()
     {
         CHECK_THROW(_tail);
@@ -403,17 +403,24 @@ public:
         --_size;
         return ret;
     }
+    // empty container
     inline void clear() { _clear(); _size = 0; }
+    // append at back
     inline DLList<T>& operator+=(const T& val) { push_back(val); return *this; }
+    // append at back
     inline DLList<T>& operator+=(T&& val) { push_back(val); return *this; }
+    // append at front
     inline DLList<T>& operator-=(const T& val) { push_front(val); return *this; }
+    // append at front
     inline DLList<T>& operator-=(T&& val) { push_front(val); return *this; }
+    // concatenate at back
     inline DLList<T>& operator+=(const DLList<T>& list)
     {
         for (const T& val : list)
             *this += val;
         return *this;
     }
+    // concatenate at back
     inline DLList<T>& operator+=(DLList<T>&& list)
     {
         if (!_head) // this is empty so move
@@ -433,6 +440,7 @@ public:
         }
         return *this;
     }
+    // reverse order of nodes
     inline void reverse()
     {
         std::swap(_head,_tail);
@@ -443,6 +451,7 @@ public:
             n = n->_next;
         }
     }
+    // create list from func(0),func(1),...,func(n-1)
     static DLList<T> fromFunc(size_t n, std::function<T(size_t)> func)
     {
         DLList<T> ret;
@@ -450,30 +459,18 @@ public:
             ret += func(i);
         return ret;
     }
+    // (stable) sort with custom comparator
     template <typename F>
     inline void sort(F comp) { if (_head) _sort_init(comp); }
+    // (stable) sort with default comparator
     inline void sort() { sort([](const T& a, const T& b){ return a < b; }); }
+    // insert before itr, return iterator to new node
     inline itr_t insert(itr_t itr, const T& val)
     {
-        if (itr == begin())
-        {
-            push_front(val);
-            return begin();
-        }
-        else if (itr == end())
-        {
-            push_back(val);
-            return _iter(_tail,this);
-        }
-        else
-        {
-            ++_size;
-            _node *n = new _node(val,itr._ptr->_prev,itr._ptr);
-            itr._ptr->_prev->_next = n;
-            itr._ptr->_prev = n;
-            return _iter(n,this);
-        }
+        T tmp = val;
+        return insert(itr,std::move(val));
     }
+    // insert before itr, return iterator to new node
     inline itr_t insert(itr_t itr, T&& val)
     {
         if (itr == begin())
@@ -495,6 +492,7 @@ public:
             return _iter(n,this);
         }
     }
+    // erase at itr, return iterator to next node
     inline itr_t erase(itr_t itr)
     {
         CHECK_THROW(itr != end());

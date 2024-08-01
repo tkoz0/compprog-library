@@ -74,9 +74,11 @@ template <typename T, size_t (*_resizer)(size_t) = resizerRatio<9,8>>
 class DynArray
 {
 private:
+    // data array
     T *_arr;
+    // data length and allocated length
     size_t _len, _alloc;
-    // grow to larger size, need _alloc_new > _alloc
+    // grow to larger size, requires _alloc_new > _alloc
     inline void _grow(size_t _alloc_new)
     {
         CHECK_THROW(_alloc_new > _alloc);
@@ -110,15 +112,27 @@ private:
         else if (_alloc_new > _alloc) // must grow
             _grow(_alloc_new);
     }
+    // swap contents with other object
+    inline void _swap(DynArray<T>& arr) noexcept
+    {
+        std::swap(_arr,arr._arr);
+        std::swap(_len,arr._len);
+        std::swap(_alloc,arr._alloc);
+    }
 public:
+    // iterator
     typedef T *itr_t;
+    // const iterator
     typedef const T *citr_t;
+    // default constructor (empty)
     DynArray() noexcept: _arr(nullptr), _len(0), _alloc(0) {}
+    // destructor
     ~DynArray()
     {
         delete[] _arr;
         _arr = nullptr;
     }
+    // size with fill value
     DynArray(int64_t siz, const T& val = T())
     {
         CHECK_THROW(siz >= 0);
@@ -127,54 +141,49 @@ public:
         _len = _alloc = siz;
         std::fill(_arr,_arr+_len,val);
     }
+    // initializer list
     DynArray(std::initializer_list<T> vals)
     {
         _arr = new T[vals.size()];
         _len = _alloc = vals.size();
         std::copy(vals.begin(),vals.end(),_arr);
     }
+    // copy constructor
     DynArray(const DynArray<T>& arr)
     {
         _arr = new T[arr._len];
         _len = _alloc = arr._len;
         std::copy(arr._arr,arr._arr+_len,_arr);
     }
-    DynArray(DynArray<T>&& arr) noexcept
-    {
-        _arr = arr._arr;
-        _len = arr._len;
-        _alloc = arr._alloc;
-        arr._arr = nullptr;
-    }
+    // move constructor
+    DynArray(DynArray<T>&& arr) noexcept: DynArray() { _swap(arr); }
+    // copy assignment
     DynArray<T>& operator=(const DynArray<T>& arr)
-    {
-        delete[] _arr;
-        _arr = new T[arr._len];
-        _len = _alloc = arr._len;
-        std::copy(arr._arr,arr._arr+_len,_arr);
-        return *this;
-    }
-    DynArray<T>& operator=(DynArray<T>&& arr)
-    {
-        delete[] _arr;
-        _arr = arr._arr;
-        _len = arr._len;
-        _alloc = arr._alloc;
-        arr._arr = nullptr;
-        return *this;
-    }
+    { DynArray<T> tmp(arr); _swap(tmp); return *this; }
+    // move assignment
+    DynArray<T>& operator=(DynArray<T>&& arr) noexcept
+    { _swap(arr); return *this; }
+    // begin iterator
     inline itr_t begin() noexcept { return _arr; }
+    // begin const iterator
     inline citr_t begin() const noexcept { return _arr; }
+    // end iterator
     inline itr_t end() noexcept { return _arr + _len; }
+    // end const iterator
     inline citr_t end() const noexcept { return _arr + _len; }
+    // pointer to data array
     inline T *ptr() noexcept { return _arr; }
+    // const pointer to data array
     inline const T *ptr() const noexcept { return _arr; }
+    // length of stored data
     inline size_t size() const noexcept { return _len; }
+    // length of internal allocation
     inline size_t alloc() const noexcept { return _alloc; }
     // is length 0
     inline bool empty() const noexcept { return _len == 0; }
     // is all the allocated space used
     inline bool full() const noexcept { return _len == _alloc; }
+    // compare equality (same size and same elements in same order)
     inline bool operator==(const DynArray<T>& arr)
     {
         if (_len != arr._len)
@@ -184,17 +193,21 @@ public:
                 return false;
         return true;
     }
+    // compare ineqquality
     inline bool operator!=(const DynArray<T>& arr) { return !(*this == arr); }
+    // element access
     inline T& operator[](int64_t i)
     {
         CHECK_THROW(i < (int64_t)_len && i >= -(int64_t)_len);
         return i >= 0 ? _arr[i] : _arr[_len + i];
     }
+    // const element access
     inline const T& operator[](int64_t i) const
     {
         CHECK_THROW(i < (int64_t)_len && i >= -(int64_t)_len);
         return i >= 0 ? _arr[i] : _arr[_len + i];
     }
+    // reverse order of stored elements
     void reverse() { std::reverse(begin(),end()); }
     // concatenate (makes allocated space exact size)
     friend DynArray<T> operator+(const DynArray<T>& arr1, const DynArray<T>& arr2)
@@ -219,6 +232,7 @@ public:
     }
     // repeated array (exact space allocated)
     friend inline DynArray<T> operator*(int64_t n, const DynArray<T>& arr) { return arr * n; }
+    // print text representation
     friend std::ostream& operator<<(std::ostream& os, const DynArray<T>& arr)
     {
         os << "DynArray[";
@@ -262,10 +276,14 @@ public:
         CHECK_THROW(n >= 0);
         return slice(std::max((int64_t)0,(int64_t)_len-n),_len);
     }
+    // (unstable) sort
     void sort() { std::sort(begin(),end()); }
+    // (unstable) sort with custom comparator
     template <typename F>
     void sort(F comp) { std::sort(begin(),end(),comp); }
+    // stable sort
     void stableSort() { std::stable_sort(begin(),end()); }
+    // stable sort with custom comparator
     template <typename F>
     void stableSort(F comp) { std::stable_sort(begin(),end(),comp); }
     // array from func(0),func(1),...,func(n-1)
@@ -279,8 +297,8 @@ public:
     // append to end
     inline void push(const T& val)
     {
-        if (_len == _alloc) _grow();
-        _arr[_len++] = val;
+        T tmp = val;
+        push(std::move(tmp));
     }
     // append to end
     inline void push(T&& val)
@@ -292,7 +310,8 @@ public:
     inline T pop()
     {
         CHECK_THROW(_len > 0);
-        return std::move(_arr[--_len]);
+        T ret = std::move(_arr[--_len]);
+        return ret;
     }
     // empty container
     void clear() { _resize(0); }
@@ -330,15 +349,8 @@ public:
     // append array to end
     inline DynArray<T>& operator+=(const DynArray<T>& arr)
     {
-        size_t _len_new = _len + arr._len;
-        size_t _alloc_new = _alloc;
-        while (_alloc_new < _len_new)
-            _alloc_new = _resizer(_alloc_new);
-        if (_alloc_new > _alloc)
-            _grow(_alloc_new);
-        std::copy(arr.begin(),arr.end(),_arr+_len);
-        _len = _len_new;
-        return *this;
+        DynArray<T> tmp = arr;
+        *this += std::move(tmp);
     }
     // append array to end
     inline DynArray<T>& operator+=(DynArray<T>&& arr)
@@ -356,16 +368,8 @@ public:
     // insert element at position
     inline void insert(int64_t i, const T& val)
     {
-        CHECK_THROW(i >= -(int64_t)_len && i <= (int64_t)_len);
-        size_t j = i >= 0 ? i : _len + i;
-        if (_len == _alloc) _grow();
-        size_t k = _len++;
-        while (k > j) // shift right
-        {
-            _arr[k] = std::move(_arr[k-1]);
-            --k;
-        }
-        _arr[k] = val;
+        T tmp = val;
+        insert(i,std::move(tmp));
     }
     // insert element at position
     inline void insert(int64_t i, T&& val)
@@ -393,6 +397,72 @@ public:
             _arr[j] = std::move(_arr[j+1]);
             ++j;
         }
+        return ret;
+    }
+    // for each with index and reference
+    void forEach(std::function<void(size_t,T&)> func)
+    { size_t i = 0; for (T& v : *this) func(i++,v); }
+    // for each with reference only
+    void forEach(std::function<void(T&)> func)
+    { for (T& v : *this) func(v); }
+    // for each with index and const reference
+    void forEach(std::function<void(size_t,const T&)> func) const
+    { size_t i = 0; for (const T& v : *this) func(i++,v); }
+    // for each with const reference only
+    void forEach(std::function<void(const T&)> func) const
+    { for (const T& v : *this) func(v); }
+    // map with indexes included
+    template <typename U>
+    DynArray<U> map(std::function<U(size_t,const T&)> func) const
+    {
+        return DynArray<U>::fromFunc(_len,[&func,this](size_t i)
+            { return func(i,_arr[i]); });
+    }
+    // map with elements only
+    template <typename U>
+    DynArray<U> map(std::function<U(const T&)> func) const
+    {
+        return DynArray<U>::fromFunc(_len,[&func,this](size_t i)
+            { return func(_arr[i]); });
+    }
+    // filter by index and value
+    DynArray<T> filter(std::function<bool(size_t,const T&)> func) const
+    {
+        size_t count = 0;
+        for (size_t i = 0; i < _len; ++i)
+            if (func(i,_arr[i])) ++count;
+        DynArray<T> ret(count);
+        size_t j = 0;
+        for (size_t i = 0; i < _len; ++i)
+            if (func(i,_arr[i])) ret[j++] = _arr[i];
+        return ret;
+    }
+    // filter by value only
+    DynArray<T> filter(std::function<bool(const T&)> func) const
+    {
+        size_t count = 0;
+        for (size_t i = 0; i < _len; ++i)
+            if (func(_arr[i])) ++count;
+        DynArray<T> ret(count);
+        size_t j = 0;
+        for (size_t i = 0; i < _len; ++i)
+            if (func(_arr[i])) ret[j++] = _arr[i];
+        return ret;
+    }
+    // fold left: ((a op b) op c) ...
+    T foldLeft(std::function<T(const T&,const T&)> func, const T& init = T()) const
+    {
+        T ret = init;
+        for (size_t i = 0; i < _len; ++i)
+            ret = func(ret,_arr[i]);
+        return ret;
+    }
+    // fold right: ... (c op (b op a))
+    T foldRight(std::function<T(const T&,const T&)> func, const T& init = T()) const
+    {
+        T ret = init;
+        for (size_t i = _len; i--;)
+            ret = func(_arr[i],ret);
         return ret;
     }
 };
