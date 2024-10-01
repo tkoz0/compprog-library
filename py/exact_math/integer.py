@@ -313,7 +313,7 @@ def list_primes(n:int) -> list[int]:
 
 if __name__ == '__main__':
 
-    def raises(func,*args):
+    def raises(func,*args) -> bool:
         ''' returns true if func(*args) raises an exception '''
         try:
             func(*args)
