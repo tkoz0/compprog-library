@@ -2,6 +2,7 @@
 
 # goals
 
+- not really sure but some possibly dumb ideas are listed
 - make it "almost as easy" to write C++ as it is to write Python for solving
 programming problems (this goal is probably not realistic)
 - provide useful code snippets to copy and paste for programming problems
@@ -16,22 +17,4 @@ programming problems (this goal is probably not realistic)
 
 # cpp
 
-The goal for now is to make all the code compatible with C++11.
-
-Data structures
-- `FixArary<T>` fixed length array
-- `DynArray<T>` dynamically resizing array like `std::vector<T>`
-- `SLList<T>` singly linked list
-- `DLList<T>` doubly linked list similar to `std::list<T>`
-
-TODOS
-- rewrite `operator=` to use copy and swap (this handles self assignment)
-- reduce some code duplication
-
 # python3
-
-Not really planned yet since I like C++ more than Python3.
-
-# java
-
-Even lower priority than Python3 due to my language preferences.
