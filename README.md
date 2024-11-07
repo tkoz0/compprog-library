@@ -1,5 +1,10 @@
 # compprog-library
 
+Named as a shortening of competitive programming library. Not really sure where
+this will go but it is probably going to be a collection of standard data
+structures and algorithms from which code snippets can be copied and pasted for
+solving competitive programming problems.
+
 # goals
 
 - not really sure but some possibly dumb ideas are listed
