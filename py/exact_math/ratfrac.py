@@ -5,16 +5,29 @@ class RatFrac:
     but it only allows operations that maintain exact rational results
     new operator: ~ flips the fraction
     '''
-    def __init__(self,n:int=0,d:int=1):
-        assert isinstance(n,int)
-        assert isinstance(d,int)
-        assert d != 0
-        if d < 0:
-            d = -d
-            n = -n
-        self.n = n
-        self.d = d
-        self._simplify()
+    def __init__(self,n:'int|str|RatFrac'=0,d:int=1):
+        if isinstance(n,int):
+            assert isinstance(d,int)
+            assert d != 0
+            if d < 0:
+                d = -d
+                n = -n
+            self.n = n
+            self.d = d
+            self._simplify()
+        elif isinstance(n,str):
+            s = n.split('/')
+            if len(s) == 1:
+                self.__init__(int(s[0]))
+            elif len(s) == 2:
+                self.__init__(int(s[0]),int(s[1]))
+            else:
+                assert 0, 'invalid fraction format'
+        elif isinstance(n,RatFrac):
+            self.n = n.n
+            self.d = n.d
+        else:
+            assert 0, f'cannot convert {type(n)} to fraction'
 
     def ratio(self) -> tuple[int,int]:
         ''' returns tuple of numerator and denominator '''
@@ -330,6 +343,15 @@ if __name__ == '__main__':
     assert RF(7).ratio() == (7,1)
     assert RF(0).ratio() == (0,1)
     assert RF(0,-8).ratio() == (0,1)
+    assert RF('61') == 61
+    assert RF('-12') == -12
+    assert raises(RF,'5/0')
+    assert raises(RF,'abc')
+    assert raises(RF,None)
+    assert RF('1/2') == RF(1,2)
+    assert RF('-12/144') == RF(-1,12)
+    assert RF(RF(2,3)) == RF(2,3)
+    assert RF(RF(-8)) == -8
 
     # __str__
     assert str(RF(5,10)) == '1/2'
