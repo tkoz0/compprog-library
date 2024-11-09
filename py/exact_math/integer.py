@@ -3,23 +3,30 @@ integer math functions, including some that python already has
 '''
 import random
 
-def gcd(a:int,b:int) -> int:
-    ''' greatest commmon divisor '''
-    # euclidean algorithm
-    if a < 0:
-        a = -a
-    if b < 0:
-        b = -b
-    if a < b:
-        a,b = b,a
-    assert a != 0, 'gcd(0,0) undefined'
+def _gcd2(a:int,b:int) -> int:
+    a = abs(a)
+    b = abs(b)
     while b != 0:
         a,b = b,a%b
     return a
 
-def lcm(a:int,b:int) -> int:
+def _lcm2(a:int,b:int) -> int:
+    g = _gcd2(a,b)
+    return 0 if g == 0 else abs(a*b)//g
+
+def gcd(*ns:int) -> int:
+    ''' greatest common divisor '''
+    ret = 0
+    for n in ns:
+        ret = _gcd2(ret,n)
+    return ret
+
+def lcm(*ns:int) -> int:
     ''' lowest common multiple '''
-    return abs(a*b)//gcd(a,b)
+    ret = 1
+    for n in ns:
+        ret = _lcm2(ret,n)
+    return ret
 
 def perm(n:int,k:int) -> int:
     ''' permutations nPk '''
@@ -322,7 +329,10 @@ if __name__ == '__main__':
             return True
 
     # gcd
-    assert raises(gcd,0,0)
+    assert gcd() == 0
+    assert gcd(0) == 0
+    assert gcd(5) == 5
+    assert gcd(-6) == 6
     assert gcd(0,5) == 5
     assert gcd(5,0) == 5
     assert gcd(1,2) == 1
@@ -334,9 +344,15 @@ if __name__ == '__main__':
     assert gcd(-91,126) == 7
     assert gcd(85,-51) == 17
     assert gcd(13,13) == 13
+    assert gcd(80,60,12) == 4
+    assert gcd(80,60,12,16) == 4
+    assert gcd(80,60,12,14) == 2
 
     # lcm
-    assert raises(lcm,0,0)
+    assert lcm() == 1
+    assert lcm(0) == 0
+    assert lcm(1) == 1
+    assert lcm(2) == 2
     assert lcm(5,0) == 0
     assert lcm(6,1) == 6
     assert lcm(-7,-3) == 21
@@ -345,6 +361,9 @@ if __name__ == '__main__':
     assert lcm(140,-35) == 140
     assert lcm(14,14) == 14
     assert lcm(72,100) == 1800
+    assert lcm(24,3,9) == 72
+    assert lcm(42,28,8) == 168
+    assert lcm(1,2,3,4,5,6,7,8,9,10) == 2520
 
     # perm
     assert raises(perm,0,-1)
@@ -564,6 +583,13 @@ if __name__ == '__main__':
     assert list_primes(0) == []
     assert list_primes(1) == []
     assert list_primes(2) == [2]
+    assert list_primes(3) == [2]
+    assert list_primes(4) == [2,3]
+    assert list_primes(5) == [2,3]
+    assert list_primes(6) == [2,3,5]
+    assert list_primes(7) == [2,3,5]
+    assert list_primes(8) == [2,3,5,7]
+    assert list_primes(9) == [2,3,5,7]
     assert list_primes(10) == [2,3,5,7]
     assert list_primes(11) == [2,3,5,7]
     assert list_primes(12) == [2,3,5,7,11]
