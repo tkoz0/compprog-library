@@ -54,39 +54,34 @@ class RatFrac:
     def __str__(self) -> str:
         return f'{self.n}' if self.d == 1 else f'{self.n}/{self.d}'
 
-    def _make_cmp_ints(self,o:'RatFrac|int') -> tuple[int,int]:
-        if isinstance(o,int):
-            return (self.n,o*self.d)
-        elif isinstance(o,RatFrac):
-            return (self.n*o.d, o.n*self.d)
-        else:
-            assert 0, 'frac can be compared with only frac or int'
+    def _make_cmp_ints(self,o:'RatFrac|int|str') -> tuple[int,int]:
+        o = RatFrac(o)
+        return (self.n*o.d, o.n*self.d)
 
-    def __lt__(self,o:'RatFrac|int') -> bool:
+    def __lt__(self,o:'RatFrac|int|str') -> bool:
         a,b = self._make_cmp_ints(o)
         return a < b
 
-    def __le__(self,o:'RatFrac|int') -> bool:
+    def __le__(self,o:'RatFrac|int|str') -> bool:
         a,b = self._make_cmp_ints(o)
         return a <= b
 
-    def __eq__(self,o:'RatFrac|int') -> bool:
+    def __eq__(self,o) -> bool:
         # fractions are kept in simplified form so this is ok
-        if isinstance(o,int):
-            return self.n == o and self.d == 1
-        elif isinstance(o,RatFrac):
+        try:
+            o = RatFrac(o)
             return self.n == o.n and self.d == o.d
-        else:
-            assert 0, 'frac can be compared with only frac or int'
+        except:
+            return False
 
-    def __ne__(self,o:'RatFrac|int') -> bool:
+    def __ne__(self,o:'RatFrac|int|str') -> bool:
         return not (self == o)
 
-    def __gt__(self,o:'RatFrac|int') -> bool:
+    def __gt__(self,o:'RatFrac|int|str') -> bool:
         a,b = self._make_cmp_ints(o)
         return a > b
 
-    def __ge__(self,o:'RatFrac|int') -> bool:
+    def __ge__(self,o:'RatFrac|int|str') -> bool:
         a,b = self._make_cmp_ints(o)
         return a >= b
 
@@ -97,53 +92,34 @@ class RatFrac:
         # unique representation of 0 is 0/1
         return self.n != 0
 
-    def __add__(self,o:'RatFrac|int') -> 'RatFrac':
-        if isinstance(o,int):
-            return RatFrac(self.n + self.d*o, self.d)
-        elif isinstance(o,RatFrac):
-            l = RatFrac._lcm(self.d,o.d)
-            return RatFrac(self.n*l//self.d + o.n*l//o.d, l)
-        else:
-            assert 0, 'frac arithmetic supported only with frac or int'
+    def __add__(self,o:'RatFrac|int|str') -> 'RatFrac':
+        o = RatFrac(o)
+        l = RatFrac._lcm(self.d,o.d)
+        return RatFrac(self.n*l//self.d + o.n*l//o.d, l)
 
-    def __sub__(self,o:'RatFrac|int') -> 'RatFrac':
-        if isinstance(o,int):
-            return RatFrac(self.n - self.d*o, self.d)
-        elif isinstance(o,RatFrac):
-            l = RatFrac._lcm(self.d,o.d)
-            return RatFrac(self.n*l//self.d - o.n*l//o.d, l)
-        else:
-            assert 0, 'frac arithmetic supported only with frac or int'
+    def __sub__(self,o:'RatFrac|int|str') -> 'RatFrac':
+        o = RatFrac(o)
+        l = RatFrac._lcm(self.d,o.d)
+        return RatFrac(self.n*l//self.d - o.n*l//o.d, l)
 
-    def __mul__(self,o:'RatFrac|int') -> 'RatFrac':
-        if isinstance(o,int):
-            return RatFrac(self.n*o, self.d)
-        elif isinstance(o,RatFrac):
-            return RatFrac(self.n*o.n, self.d*o.d)
-        else:
-            assert 0, 'frac arithmetic supported only with frac or int'
+    def __mul__(self,o:'RatFrac|int|str') -> 'RatFrac':
+        o = RatFrac(o)
+        return RatFrac(self.n*o.n, self.d*o.d)
 
-    def __truediv__(self,o:'RatFrac|int') -> 'RatFrac':
-        if isinstance(o,int):
-            return RatFrac(self.n,self.d*o)
-        elif isinstance(o,RatFrac):
-            return RatFrac(self.n*o.d, self.d*o.n)
-        else:
-            assert 0, 'frac arithmetic supported only with frac or int'
+    def __truediv__(self,o:'RatFrac|int|str') -> 'RatFrac':
+        o = RatFrac(o)
+        return RatFrac(self.n*o.d, self.d*o.n)
 
-    def __floordiv__(self,o:'RatFrac|int') -> int:
+    def __floordiv__(self,o:'RatFrac|int|str') -> int:
         return (self/o).__floor__()
 
-    def __mod__(self,o:'RatFrac|int') -> 'RatFrac':
-        if isinstance(o,int):
-            return RatFrac(self.n % (self.d*o), self.d)
-        elif isinstance(o,RatFrac):
-            l = RatFrac._lcm(self.d,o.d)
-            return RatFrac((self.n*l//self.d) % (o.n*l//o.d), l)
-        else:
-            assert 0, 'frac arithmetic supported only with frac or int'
+    def __mod__(self,o:'RatFrac|int|str') -> 'RatFrac':
+        o = RatFrac(o)
+        l = RatFrac._lcm(self.d,o.d)
+        return RatFrac((self.n*l//self.d) % (o.n*l//o.d), l)
 
-    def __divmod__(self,o:'RatFrac|int') -> tuple[int,'RatFrac']:
+    def __divmod__(self,o:'RatFrac|int|str') -> tuple[int,'RatFrac']:
+        o = RatFrac(o)
         return (self//o,self%o)
 
     @staticmethod
@@ -170,7 +146,7 @@ class RatFrac:
         return ret
 
     # TODO maybe make this return some kind of integer radical type
-    def __pow__(self,o:'RatFrac|int') -> 'RatFrac':
+    def __pow__(self,o:'RatFrac|int|str') -> 'RatFrac':
         if isinstance(o,int):
             if o > 0:
                 return RatFrac(self.n**o, self.d**o)
@@ -178,56 +154,40 @@ class RatFrac:
                 return RatFrac(self.d**(-o), self.n**(-o))
             else:
                 return RatFrac(1)
-        elif isinstance(o,RatFrac):
-            if o.d == 1:
-                return self**o.n
-            # compute dth roots
-            if o.d % 2 == 0 and self.n < 0:
-                assert 0, 'even root of negative value'
-            rn = RatFrac._iroot(o.d,self.n) if self.n >= 0 else -RatFrac._iroot(o.d,-self.n)
-            rd = RatFrac._iroot(o.d,self.d)
-            return RatFrac(rn,rd)**o.n
-        else:
-            assert 0, 'frac arithmetic only supported with frac or int'
+        o = RatFrac(o)
+        if o.d == 1:
+            return self**o.n
+        # compute dth roots
+        if o.d % 2 == 0 and self.n < 0:
+            assert 0, 'even root of negative value'
+        rn = RatFrac._iroot(o.d,self.n) if self.n >= 0 else -RatFrac._iroot(o.d,-self.n)
+        rd = RatFrac._iroot(o.d,self.d)
+        return RatFrac(rn,rd)**o.n
 
-    def __radd__(self,o:int) -> 'RatFrac':
-        assert isinstance(o,int)
+    def __radd__(self,o:int|str) -> 'RatFrac':
         return self+o
 
-    def __rsub__(self,o:int) -> 'RatFrac':
-        assert isinstance(o,int)
+    def __rsub__(self,o:int|str) -> 'RatFrac':
         return -(self-o)
 
-    def __rmul__(self,o:int) -> 'RatFrac':
-        assert isinstance(o,int)
+    def __rmul__(self,o:int|str) -> 'RatFrac':
         return self*o
 
-    def __rtruediv__(self,o:int) -> 'RatFrac':
-        assert isinstance(o,int)
+    def __rtruediv__(self,o:int|str) -> 'RatFrac':
         return RatFrac(o)/self
 
-    def __rfloordiv__(self,o:int) -> int:
-        assert isinstance(o,int)
+    def __rfloordiv__(self,o:int|str) -> int:
         return RatFrac(o)//self
 
     def __rmod__(self,o:int) -> 'RatFrac':
-        assert isinstance(o,int)
+        # cannot use string because str % is for formatting
         return RatFrac(o)%self
 
-    def __rdivmod__(self,o:int) -> tuple[int,'RatFrac']:
-        assert isinstance(o,int)
+    def __rdivmod__(self,o:int|str) -> tuple[int,'RatFrac']:
         return divmod(RatFrac(o),self)
 
-    def __rpow__(self,o:int) -> 'RatFrac':
-        assert isinstance(o,int)
-        if o < 0:
-            if self.d % 2 == 0:
-                assert 0, 'even root of a negative value'
-            r = -RatFrac._iroot(self.d,-o)
-            return RatFrac(r)**self.n
-        else:
-            r = RatFrac._iroot(self.d,o)
-            return RatFrac(r)**self.n
+    def __rpow__(self,o:int|str) -> 'RatFrac':
+        return RatFrac(o)**self
 
     def __neg__(self) -> 'RatFrac':
         return RatFrac(-self.n,self.d)
@@ -370,6 +330,8 @@ if __name__ == '__main__':
     assert RF(1,-3) == RF(-1,3)
     assert RF(-11,-15) == RF(110,150)
     assert RF(0) == RF(0,-12)
+    assert RF(3,4) == '3/4'
+    assert '5/6' == RF(5,6)
 
     # __ne__ !=
     assert RF(1,2) != RF(2,3)
@@ -379,9 +341,11 @@ if __name__ == '__main__':
     assert RF(-6,15) != RF(-8,15)
     assert RF(0) != RF(1)
     assert RF(0,5) != RF(-1,2)
+    assert RF(-12) != '11'
+    assert '-3' != RF(-3,2)
 
     # tuples of (a,b,comp) where comp is lt,gt,eq
-    CMP_TESTS: list[tuple[int|RF,int|RF,str]] = [
+    CMP_TESTS: list[tuple[int|str|RF,int|str|RF,str]] = [
         (RF(0),RF(0),'eq'),
         (RF(0),RF(1),'lt'),
         (RF(5),RF(5),'eq'),
@@ -400,7 +364,13 @@ if __name__ == '__main__':
         (RF(-7,5),RF(877,3),'lt'),
         (RF(58,6),RF(43,-43),'gt'),
         (12,RF(11),'gt'),
-        (76,RF(1000,11),'lt')
+        (76,RF(1000,11),'lt'),
+        ('4/10',RF(1,2),'lt'),
+        ('-6',RF(-13,2),'gt'),
+        ('-7/16',RF(-7,16),'eq'),
+        (RF(-4,7),'-3/7','lt'),
+        (RF(2,29),'1/29','gt'),
+        (RF(21,22),'21/22','eq')
     ]
 
     # __eq__ ==
@@ -413,19 +383,23 @@ if __name__ == '__main__':
 
     # __lt__ <
     for a,b,c in CMP_TESTS:
-        assert a < b if c == 'lt' else not (a < b), (a,b,c)
+        assert isinstance(a,RF) or isinstance(b,RF)
+        assert a < b if c == 'lt' else not (a < b), (a,b,c) # type:ignore
 
     # __le__ <=
     for a,b,c in CMP_TESTS:
-        assert not (a <= b) if c == 'gt' else a <= b, (a,b,c)
+        assert isinstance(a,RF) or isinstance(b,RF)
+        assert not (a <= b) if c == 'gt' else a <= b, (a,b,c) # type:ignore
 
     # __gt__ >
     for a,b,c in CMP_TESTS:
-        assert a > b if c == 'gt' else not (a > b), (a,b,c)
+        assert isinstance(a,RF) or isinstance(b,RF)
+        assert a > b if c == 'gt' else not (a > b), (a,b,c) # type:ignore
 
     # __ge__ >=
     for a,b,c in CMP_TESTS:
-        assert not (a >= b) if c == 'lt' else a >= b, (a,b,c)
+        assert isinstance(a,RF) or isinstance(b,RF)
+        assert not (a >= b) if c == 'lt' else a >= b, (a,b,c) # type:ignore
 
     # __bool__
     assert bool(RF()) == False
@@ -447,6 +421,7 @@ if __name__ == '__main__':
     assert RF(1,6) + 0 == RF(1,6)
     assert RF(1,6) + 3 == RF(19,6)
     assert RF(-12) + RF(8,5) == RF(-52,5)
+    assert RF(6,7) + '1/7' == 1
 
     # __sub__ -
     assert RF(1,12) - RF(1,30) == RF(1,20)
@@ -459,6 +434,7 @@ if __name__ == '__main__':
     assert RF(25,12) - RF(4,9) == RF(59,36)
     assert RF(16,7) - 0 == RF(16,7)
     assert RF(87,40) - 2 == RF(7,40)
+    assert RF(6,7) - '-1/7' == 1
 
     # __mul__ *
     assert RF(1,3) * 6 == 2
@@ -470,6 +446,7 @@ if __name__ == '__main__':
     assert RF(3,40) * RF(1,5) == RF(3,200)
     assert RF(14,3) * -2 == RF(-28,3)
     assert RF(-3,2) * 3 == RF(-9,2)
+    assert RF(1,7) * '7' == 1
 
     # __truediv__ /
     assert raises(op.truediv,RF(1,7),0)
@@ -481,8 +458,9 @@ if __name__ == '__main__':
     assert RF(5,2) / RF(1,4) == 10
     assert RF(12,5) / RF(27,5) == RF(4,9)
     assert RF(7,15) / RF(4) == RF(7,60)
+    assert RF(7,15) / '4' == '7/60'
 
-    DIV_TESTS: list[tuple[RF|int,RF|int,int,RF]] = [
+    DIV_TESTS: list[tuple[RF,RF|int|str,int,RF]] = [
         (RF(80),7,11,RF(3)),
         (RF(127),17,7,RF(8)),
         (RF(1,2),1,0,RF(1,2)),
@@ -491,7 +469,8 @@ if __name__ == '__main__':
         (RF(60,13),RF(4,5),5,RF(8,13)),
         (RF(-61,12),RF(-41,30),3,RF(-59,60)),
         (RF(15,2),RF(2),3,RF(3,2)),
-        (RF(15,2),RF(-2),-4,RF(-1,2))
+        (RF(15,2),RF(-2),-4,RF(-1,2)),
+        (RF(15,2),'-2',-4,RF(-1,2))
     ]
 
     # __floordiv__ //
@@ -511,7 +490,7 @@ if __name__ == '__main__':
     assert raises(divmod,RF(0),0)
     for a,b,c,d in DIV_TESTS:
         assert divmod(a,b) == (c,d)
-        assert c*b + d == a
+        assert c*RF(b) + d == a
 
     # __pow__ **
     assert RF(0) ** 0 == 1
@@ -541,41 +520,50 @@ if __name__ == '__main__':
     assert RF(49,484) ** RF(-1,2) == RF(22,7)
     assert raises(op.pow,RF(5610,67),RF(4,11))
     assert raises(op.pow,RF(-617,47),RF(-7,4))
+    assert RF(3,7) ** '2' == '9/49'
+    assert RF(256,81) ** '-3/4' == '27/64'
 
     # __radd__ +
     assert 6 + RF(1,2) == RF(13,2)
     assert 0 + RF(5,12) == RF(5,12)
     assert 8 + RF(6) == 14
+    assert '1/2' + RF(1,2) == 1
 
     # __rsub__ -
     assert 3 - RF(2) == RF(1)
     assert 3 - RF(2,7) == RF(19,7)
     assert 8 - RF(6) == 2
+    assert '-1/2' - RF(-1,2) == 0
 
     # __rmul__ *
     assert 3 * RF(2,3) == 2
     assert 4 * RF(6,7) == RF(24,7)
     assert 0 * RF(6789,1234) == 0
+    assert '1/8' * RF(64) == 8
 
     # __rtruediv__ /
     assert 12 / RF(4) == 3
     assert 0 / RF(65,7) == 0
     assert 15 / RF(10,3) == RF(9,2)
+    assert '1/6' / RF(5,6) == RF(1,5)
 
     # __rfloordiv__ //
     assert 12 // RF(7,6) == 10
     assert -1 // RF(2) == -1
     assert -7 // RF(-3,2) == 4
+    assert '-7' // RF(-3,2) == 4
 
     # __rmod__ %
     assert 16 % RF(5) == 1
     assert 12 % RF(7,3) == RF(1,3)
     assert 8 % RF(-3,11) == RF(-2,11)
+    # cannot do str % because it it for formatting
 
     # __rdivmod__
     assert divmod(7,RF(3,5)) == (11,RF(2,5))
     assert divmod(14,RF(-17,12)) == (-10,RF(-1,6))
     assert raises(divmod,10,RF(0))
+    assert divmod('14',RF(-17,12)) == (-10,RF(-1,6))
 
     # __rpow__ **
     assert 0**RF(0) == 1
@@ -593,6 +581,8 @@ if __name__ == '__main__':
     assert (-5)**RF(2) == 25
     assert 256**RF(3,4) == 64
     assert (-4096)**RF(2,3) == 256
+    assert '81'**RF(1,2) == 9
+    assert '1/8'**RF(2,3) == '1/4'
 
     # __neg__ -
     assert -RF(0) == RF(0)
