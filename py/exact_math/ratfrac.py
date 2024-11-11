@@ -271,6 +271,12 @@ class RatFrac:
         # slow algorithm is left in as an option for testing
         return self._approx_fast(max_denom)
 
+    def __int__(self) -> int:
+        return self.__floor__()
+
+    def __float__(self) -> float:
+        return self.n/self.d
+
 if __name__ == '__main__':
 
     #from fractions import Fraction as PF
@@ -669,3 +675,17 @@ if __name__ == '__main__':
     assert RF(5738648626427468489168946151,509709478686285916).approx(30000) == RF(321581268488696,28563)
     assert RF(-1856719865,486286485183).approx(10000) == RF(-32,8381)
     assert RF(7286718651,815869864189).approx(10000) == RF(30,3359)
+
+    # __int__
+    assert int(RF()) == 0
+    assert int(RF(1,2)) == 0
+    assert int(RF(70,19)) == 3
+    assert int(RF(-1,10)) == -1
+    assert int(RF(-18,7)) == -3
+
+    # __float__
+    assert float(RF()) == 0.0
+    assert float(RF(7,4)) == 1.75
+    assert float(RF(2,3)) == 2/3
+    assert float(RF(-514,81)) == -514/81
+    assert float(RF(-4)) == -4.0
