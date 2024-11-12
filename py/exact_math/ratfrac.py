@@ -27,7 +27,7 @@ class RatFrac:
             self.n = n.n
             self.d = n.d
         else:
-            assert 0, f'cannot convert {type(n)} to fraction'
+            assert 0, f'cannot convert {type(n)} to RatFrac'
 
     def ratio(self) -> tuple[int,int]:
         ''' returns tuple of numerator and denominator '''
@@ -35,13 +35,15 @@ class RatFrac:
 
     @staticmethod
     def _gcd(a:int,b:int) -> int:
+        a = abs(a)
+        b = abs(b)
         while b != 0:
             a,b = b,a%b
         return a
 
     @staticmethod
     def _lcm(a:int,b:int) -> int:
-        return a*b//RatFrac._gcd(a,b)
+        return abs(a*b)//RatFrac._gcd(a,b)
 
     def _simplify(self):
         g = RatFrac._gcd(self.n,self.d)
@@ -59,12 +61,16 @@ class RatFrac:
         return (self.n*o.d, o.n*self.d)
 
     def __lt__(self,o:'RatFrac|int|str') -> bool:
-        a,b = self._make_cmp_ints(o)
-        return a < b
+        if isinstance(o,(RatFrac,int,str)):
+            a,b = self._make_cmp_ints(o)
+            return a < b
+        return NotImplemented
 
     def __le__(self,o:'RatFrac|int|str') -> bool:
-        a,b = self._make_cmp_ints(o)
-        return a <= b
+        if isinstance(o,(RatFrac,int,str)):
+            a,b = self._make_cmp_ints(o)
+            return a <= b
+        return NotImplemented
 
     def __eq__(self,o) -> bool:
         # fractions are kept in simplified form so this is ok
@@ -78,12 +84,16 @@ class RatFrac:
         return not (self == o)
 
     def __gt__(self,o:'RatFrac|int|str') -> bool:
-        a,b = self._make_cmp_ints(o)
-        return a > b
+        if isinstance(o,(RatFrac,int,str)):
+            a,b = self._make_cmp_ints(o)
+            return a > b
+        return NotImplemented
 
     def __ge__(self,o:'RatFrac|int|str') -> bool:
-        a,b = self._make_cmp_ints(o)
-        return a >= b
+        if isinstance(o,(RatFrac,int,str)):
+            a,b = self._make_cmp_ints(o)
+            return a >= b
+        return NotImplemented
 
     def __hash__(self) -> int:
         return hash((self.n,self.d))
@@ -93,34 +103,48 @@ class RatFrac:
         return self.n != 0
 
     def __add__(self,o:'RatFrac|int|str') -> 'RatFrac':
-        o = RatFrac(o)
-        l = RatFrac._lcm(self.d,o.d)
-        return RatFrac(self.n*l//self.d + o.n*l//o.d, l)
+        if isinstance(o,(RatFrac,int,str)):
+            o = RatFrac(o)
+            l = RatFrac._lcm(self.d,o.d)
+            return RatFrac(self.n*l//self.d + o.n*l//o.d, l)
+        return NotImplemented
 
     def __sub__(self,o:'RatFrac|int|str') -> 'RatFrac':
-        o = RatFrac(o)
-        l = RatFrac._lcm(self.d,o.d)
-        return RatFrac(self.n*l//self.d - o.n*l//o.d, l)
+        if isinstance(o,(RatFrac,int,str)):
+            o = RatFrac(o)
+            l = RatFrac._lcm(self.d,o.d)
+            return RatFrac(self.n*l//self.d - o.n*l//o.d, l)
+        return NotImplemented
 
     def __mul__(self,o:'RatFrac|int|str') -> 'RatFrac':
-        o = RatFrac(o)
-        return RatFrac(self.n*o.n, self.d*o.d)
+        if isinstance(o,(RatFrac,int,str)):
+            o = RatFrac(o)
+            return RatFrac(self.n*o.n, self.d*o.d)
+        return NotImplemented
 
     def __truediv__(self,o:'RatFrac|int|str') -> 'RatFrac':
-        o = RatFrac(o)
-        return RatFrac(self.n*o.d, self.d*o.n)
+        if isinstance(o,(RatFrac,int,str)):
+            o = RatFrac(o)
+            return RatFrac(self.n*o.d, self.d*o.n)
+        return NotImplemented
 
     def __floordiv__(self,o:'RatFrac|int|str') -> int:
-        return (self/o).__floor__()
+        if isinstance(o,(RatFrac,int,str)):
+            return (self/o).__floor__()
+        return NotImplemented
 
     def __mod__(self,o:'RatFrac|int|str') -> 'RatFrac':
-        o = RatFrac(o)
-        l = RatFrac._lcm(self.d,o.d)
-        return RatFrac((self.n*l//self.d) % (o.n*l//o.d), l)
+        if isinstance(o,(RatFrac,int,str)):
+            o = RatFrac(o)
+            l = RatFrac._lcm(self.d,o.d)
+            return RatFrac((self.n*l//self.d) % (o.n*l//o.d), l)
+        return NotImplemented
 
     def __divmod__(self,o:'RatFrac|int|str') -> tuple[int,'RatFrac']:
-        o = RatFrac(o)
-        return (self//o,self%o)
+        if isinstance(o,(RatFrac,int,str)):
+            o = RatFrac(o)
+            return (self//o,self%o)
+        return NotImplemented
 
     @staticmethod
     def _iroot(r:int,n:int) -> int:
@@ -142,10 +166,10 @@ class RatFrac:
                 ret |= bit
             bit >>= 1
         if ret**r != n:
-            assert 0, 'irrational result'
+            raise NotImplementedError('irrational results not supported yet')
         return ret
 
-    # TODO maybe make this return some kind of integer radical type
+    # TODO make this return some kind of integer radical type
     def __pow__(self,o:'RatFrac|int|str') -> 'RatFrac':
         if isinstance(o,int):
             if o > 0:
@@ -154,40 +178,58 @@ class RatFrac:
                 return RatFrac(self.d**(-o), self.n**(-o))
             else:
                 return RatFrac(1)
-        o = RatFrac(o)
-        if o.d == 1:
-            return self**o.n
-        # compute dth roots
-        if o.d % 2 == 0 and self.n < 0:
-            assert 0, 'even root of negative value'
-        rn = RatFrac._iroot(o.d,self.n) if self.n >= 0 else -RatFrac._iroot(o.d,-self.n)
-        rd = RatFrac._iroot(o.d,self.d)
-        return RatFrac(rn,rd)**o.n
+        elif isinstance(o,(RatFrac,str)):
+            o = RatFrac(o)
+            if o.d == 1:
+                return self**o.n
+            # compute dth roots
+            if o.d % 2 == 0 and self.n < 0:
+                assert 0, 'even root of negative value'
+            rn = RatFrac._iroot(o.d,self.n) if self.n >= 0 else -RatFrac._iroot(o.d,-self.n)
+            rd = RatFrac._iroot(o.d,self.d)
+            return RatFrac(rn,rd)**o.n
+        return NotImplemented
 
     def __radd__(self,o:int|str) -> 'RatFrac':
-        return self+o
+        if isinstance(o,(int,str)):
+            return self+o
+        return NotImplemented
 
     def __rsub__(self,o:int|str) -> 'RatFrac':
-        return -(self-o)
+        if isinstance(o,(int,str)):
+            return -(self-o)
+        return NotImplemented
 
     def __rmul__(self,o:int|str) -> 'RatFrac':
-        return self*o
+        if isinstance(o,(int,str)):
+            return self*o
+        return NotImplemented
 
     def __rtruediv__(self,o:int|str) -> 'RatFrac':
-        return RatFrac(o)/self
+        if isinstance(o,(int,str)):
+            return RatFrac(o)/self
+        return NotImplemented
 
     def __rfloordiv__(self,o:int|str) -> int:
-        return RatFrac(o)//self
+        if isinstance(o,(int,str)):
+            return RatFrac(o)//self
+        return NotImplemented
 
-    def __rmod__(self,o:int) -> 'RatFrac':
-        # cannot use string because str % is for formatting
-        return RatFrac(o)%self
+    def __rmod__(self,o:int|str) -> 'RatFrac':
+        # str % is for formatting so str will not work here
+        if isinstance(o,(int,str)):
+            return RatFrac(o)%self
+        return NotImplemented
 
     def __rdivmod__(self,o:int|str) -> tuple[int,'RatFrac']:
-        return divmod(RatFrac(o),self)
+        if isinstance(o,(int,str)):
+            return divmod(RatFrac(o),self)
+        return NotImplemented
 
     def __rpow__(self,o:int|str) -> 'RatFrac':
-        return RatFrac(o)**self
+        if isinstance(o,(int,str)):
+            return RatFrac(o)**self
+        return NotImplemented
 
     def __neg__(self) -> 'RatFrac':
         return RatFrac(-self.n,self.d)
