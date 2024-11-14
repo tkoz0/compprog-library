@@ -1,3 +1,4 @@
+import integer
 
 class RatFrac:
     '''
@@ -33,20 +34,8 @@ class RatFrac:
         ''' returns tuple of numerator and denominator '''
         return (self.n,self.d)
 
-    @staticmethod
-    def _gcd(a:int,b:int) -> int:
-        a = abs(a)
-        b = abs(b)
-        while b != 0:
-            a,b = b,a%b
-        return a
-
-    @staticmethod
-    def _lcm(a:int,b:int) -> int:
-        return abs(a*b)//RatFrac._gcd(a,b)
-
     def _simplify(self):
-        g = RatFrac._gcd(self.n,self.d)
+        g = integer.gcd(self.n,self.d)
         self.n //= g
         self.d //= g
 
@@ -105,14 +94,14 @@ class RatFrac:
     def __add__(self,o:'RatFrac|int|str') -> 'RatFrac':
         if isinstance(o,(RatFrac,int,str)):
             o = RatFrac(o)
-            l = RatFrac._lcm(self.d,o.d)
+            l = integer.lcm(self.d,o.d)
             return RatFrac(self.n*l//self.d + o.n*l//o.d, l)
         return NotImplemented
 
     def __sub__(self,o:'RatFrac|int|str') -> 'RatFrac':
         if isinstance(o,(RatFrac,int,str)):
             o = RatFrac(o)
-            l = RatFrac._lcm(self.d,o.d)
+            l = integer.lcm(self.d,o.d)
             return RatFrac(self.n*l//self.d - o.n*l//o.d, l)
         return NotImplemented
 
@@ -136,7 +125,7 @@ class RatFrac:
     def __mod__(self,o:'RatFrac|int|str') -> 'RatFrac':
         if isinstance(o,(RatFrac,int,str)):
             o = RatFrac(o)
-            l = RatFrac._lcm(self.d,o.d)
+            l = integer.lcm(self.d,o.d)
             return RatFrac((self.n*l//self.d) % (o.n*l//o.d), l)
         return NotImplemented
 
@@ -148,23 +137,8 @@ class RatFrac:
 
     @staticmethod
     def _iroot(r:int,n:int) -> int:
-        # integer rth root of n with binary method
-        # raises exception for irrational result
-        # TODO changing this behavior may be desirable
-        assert r >= 1
-        assert n >= 0
-        if r == 1:
-            return n
-        if n <= 1:
-            return n
-        ret = 1
-        while (ret<<1)**r <= n:
-            ret <<= 1
-        bit = ret >> 1
-        while bit:
-            if (ret|bit)**r <= n:
-                ret |= bit
-            bit >>= 1
+        # integer root, raise exception for non exact result (irrational)
+        ret = integer.iroot(r,n)
         if ret**r != n:
             raise NotImplementedError('irrational results not supported yet')
         return ret

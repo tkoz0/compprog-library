@@ -112,7 +112,7 @@ def iroot(r:int,n:int) -> int:
     # binary method similar to icbrt()
     assert r >= 1
     assert n >= 0
-    if n <= 1:
+    if n <= 1 or r == 1:
         return n
     ret = 1
     while (ret<<1)**r <= n:
