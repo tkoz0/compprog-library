@@ -87,7 +87,7 @@ class RatFrac:
     def __hash__(self) -> int:
         return hash((self.n,self.d))
 
-    def __bool__(self) -> int:
+    def __bool__(self) -> bool:
         # unique representation of 0 is 0/1
         return self.n != 0
 
