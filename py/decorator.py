@@ -1,7 +1,7 @@
 
 from typing import Callable,Any
 
-def cache_all(func:Callable) -> Callable:
+def cache_all(func:Callable,/) -> Callable:
     '''
     basic caching for all calls to the function
     only supports positional args
@@ -30,7 +30,7 @@ def cache_all(func:Callable) -> Callable:
     wrapped.cache_size = cache_size
     return wrapped
 
-def cache_lru(size:int):
+def cache_lru(size:int,/):
     '''
     least recently used cache of given size
     only supports positional args
@@ -44,7 +44,7 @@ def cache_lru(size:int):
         raise ValueError('lru cache size must be > 1')
 
     # the annotator function
-    def wrapper(func:Callable) -> Callable:
+    def wrapper(func:Callable,/) -> Callable:
         # key -> (value,listindex)
         cache: dict[tuple,tuple[Any,int]] = dict()
         # list nodes are (key,prev,next) using indexes
@@ -170,7 +170,7 @@ def cache_lru(size:int):
 if __name__ == '__main__':
 
     @cache_all
-    def fib(n:int) -> int:
+    def fib(n:int,/) -> int:
         return n if n < 2 else fib(n-1) + fib(n-2)
 
     assert fib.cache_size() == 0
@@ -185,7 +185,7 @@ if __name__ == '__main__':
     assert fib.cache_size() == 0
 
     @cache_lru(10)
-    def double(n:int) -> int:
+    def double(n:int,/) -> int:
         return 2*n
 
     assert double(0) == 0
